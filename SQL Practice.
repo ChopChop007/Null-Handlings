@@ -1,0 +1,42 @@
+USE AdventureWorks2022
+
+GO
+
+SELECT PP.Color
+      ,ISNULL(PP.Color,'Unknown') AS [New Color1]
+	  ,COALESCE(PP.Color,'Unknown') AS [New Color2]
+	  ,IIF(PP.Color IS NULL,'Unknown',PP.COLOR) AS [New Color3]
+	  ,IIF(PP.Color IS NOT NULL,PP.COLOR,'Unknown') AS [New Color4]
+	  ,CASE WHEN PP.Color IS NULL THEN 'Unknown' ELSE PP.Color END AS [New Color5]
+	  ,CASE WHEN PP.COLOR IS NOT NULL THEN PP.COLOR ELSE 'Unknown' END AS [New Color6]
+	  ,CASE WHEN PP.Color IS NULL THEN 'Unknown' 
+	        WHEN PP.COLOR = 'BLACK' THEN 'FEMI'
+			WHEN PP.Color = 'RED' THEN 'EMMAX'
+	   ELSE PP.Color END AS [New Color7]
+	   ,IIF(PP.Color IS NULL,'Unknown',IIF(PP.Color ='BLACK','FEMI',IIF(PP.Color ='RED','EMMAX',PP.COLOR))) AS [New  color8]
+FROM Production.Product PP
+
+
+
+
+SELECT A.[Month]
+      ,A.[Color]
+	  ,A.[Sale Channel]
+	  ,SUM(A.[OrderQty]) AS [Total Order]
+	  ,SUM(A.[Amount Spent]) AS [Total Spent]
+FROM (
+SELECT CONCAT(DD.EnglishMonthName,' ',DD.FiscalYear) AS [Month]
+      ,ISNULL(PP.Color,'Unknown') AS [Color]
+	  ,CASE WHEN SH.OnlineOrderFlag = 1 THEN 'Online' ELSE 'Store' END AS [Sale Channel]
+	  ,SH.SalesOrderID
+	  ,SD.OrderQty
+	  ,SH.SubTotal
+	  ,CAST(ROUND((SH.SubTotal*SD.OrderQty),0) AS INT) AS [Amount Spent]
+FROM SALES.SalesOrderHeader SH
+LEFT JOIN Sales.SalesOrderDetail SD ON SD.SalesOrderID = SH.SalesOrderID
+LEFT JOIN Production.Product PP ON PP.ProductID = SD.ProductID
+LEFT JOIN AdventureWorksDW2019.DBO.DimDate DD ON DD.FullDateAlternateKey = SH.OrderDate
+)A
+ GROUP BY A.[Month]
+         ,A.[Color]
+	     ,A.[Sale Channel]
